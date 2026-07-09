@@ -1,0 +1,17 @@
+### Health Check Test
+GET http://localhost:3000/api/health
+
+### Resume Upload Test
+POST http://localhost:3000/api/resume
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="targetRole"
+
+software-development
+--WebAppBoundary
+Content-Disposition: form-data; name="resume"; filename="resume.pdf"
+Content-Type: application/pdf
+
+< "C:\Users\wwwsh\OneDrive\Desktop\Shaheer-Khalid-Resume.docx"
+--WebAppBoundary--

@@ -3,7 +3,8 @@ import connectDB from '@/lib/db';
 import Resume from '@/models/Resume';
 import RoleRequirement from '@/models/RoleRequirement';
 import Roadmap from '@/models/Roadmap';
-import { extractSkillsFromResume, generateRoadmap } from '@/services/groqService';
+import { extractSkillsFromResume, generateRoadmapForGaps } from '@/services/groqService';
+import { calculateSkillGap } from '@/services/skillGapService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,10 +27,18 @@ export async function POST(request: NextRequest) {
     }
 
     let extractedSkills: string[];
-    let result;
+    let weeks;
+
     try {
       extractedSkills = await extractSkillsFromResume(resume.rawText);
-      result = await generateRoadmap(extractedSkills, resume.targetRole, roleReq.requiredSkills);
+
+      const gapResult = calculateSkillGap(extractedSkills, roleReq.requiredSkills);
+
+      resume.extractedSkills = extractedSkills;
+      resume.analysis = gapResult;
+      await resume.save();
+
+      weeks = await generateRoadmapForGaps(gapResult.missingSkills, resume.targetRole);
     } catch (aiErr) {
       console.error('AI processing error:', aiErr);
       return NextResponse.json(
@@ -38,17 +47,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    resume.extractedSkills = extractedSkills;
-    resume.analysis = {
-      matchedSkills: result.matchedSkills,
-      missingSkills: result.missingSkills,
-      readinessScore: result.readinessScore
-    };
-    await resume.save();
-
     const roadmap = await Roadmap.create({
       resumeId: resume._id,
-      weeks: result.roadmap
+      weeks
     });
 
     return NextResponse.json({
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       extractedSkills,
       analysis: resume.analysis,
       roadmapId: roadmap._id,
-      roadmap: result.roadmap
+      roadmap: weeks
     });
 
   } catch (error) {

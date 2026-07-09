@@ -33,32 +33,30 @@ interface RoadmapWeek {
   miniProjects: string[];
 }
 
-interface RoadmapResult {
-  matchedSkills: string[];
-  missingSkills: string[];
-  readinessScore: number;
-  roadmap: RoadmapWeek[];
-}
+// Ye function ab sirf roadmap banata hai, matched/missing calculate NAHI karta
+export async function generateRoadmapForGaps(
+  missingSkills: string[],
+  targetRole: string
+): Promise<RoadmapWeek[]> {
+  if (missingSkills.length === 0) {
+    return [{
+      weekNumber: 1,
+      topics: ['You already have all the required skills for this role'],
+      resources: [],
+      miniProjects: ['Consider building an advanced project to showcase your expertise']
+    }];
+  }
 
-export async function generateRoadmap(
-  extractedSkills: string[],
-  targetRole: string,
-  requiredSkills: { skill: string; priority: string }[]
-): Promise<RoadmapResult> {
   const prompt = `
 You are a career advisor for software developers.
 
-Candidate's current skills: ${JSON.stringify(extractedSkills)}
 Target role: ${targetRole}
-Required skills for this role: ${JSON.stringify(requiredSkills)}
+Skills the candidate is missing: ${JSON.stringify(missingSkills)}
 
-Analyze the gap and generate a week-by-week learning roadmap (6 weeks).
+Generate a week-by-week learning roadmap (6 weeks) to help them learn ONLY these missing skills.
 Return ONLY valid JSON in this exact format, no extra text, no markdown:
 
 {
-  "matchedSkills": ["skill1", "skill2"],
-  "missingSkills": ["skill3", "skill4"],
-  "readinessScore": 65,
   "roadmap": [
     {
       "weekNumber": 1,
@@ -76,7 +74,8 @@ Return ONLY valid JSON in this exact format, no extra text, no markdown:
     temperature: 0.3,
   });
 
-  const content = response.choices[0].message.content || '{}';
+  const content = response.choices[0].message.content || '{"roadmap":[]}';
   const cleaned = content.replace(/```json|```/g, '').trim();
-  return JSON.parse(cleaned);
+  const parsed = JSON.parse(cleaned);
+  return parsed.roadmap || [];
 }

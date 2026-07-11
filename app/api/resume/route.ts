@@ -5,7 +5,12 @@ import { parseResume } from '@/services/resumeParser';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_EXTENSIONS = ['pdf', 'docx'];
-const VALID_ROLES = ['software-development', 'ai-ml', 'devops', 'data-science', 'frontend', 'backend'];
+const VALID_ROLES = [
+  'software-development', 'ai-ml', 'devops', 'data-science', 'frontend', 'backend',
+  'digital-marketing', 'sales', 'human-resources', 'finance-accounting',
+  'graphic-design', 'content-writing', 'customer-support', 'project-management',
+  'teaching-education'
+];
 
 export async function POST(request: NextRequest) {
   try {

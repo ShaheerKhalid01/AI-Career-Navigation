@@ -1,7 +1,5 @@
-import * as pdfParseModule from 'pdf-parse';
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import mammoth from 'mammoth';
-
-const pdfParse = (pdfParseModule as any).default || pdfParseModule;
 
 export async function parseResume(buffer: Buffer, fileName: string): Promise<string> {
   const extension = fileName.split('.').pop()?.toLowerCase();

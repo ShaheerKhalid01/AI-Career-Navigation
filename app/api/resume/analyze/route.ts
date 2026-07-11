@@ -3,8 +3,8 @@ import connectDB from '@/lib/db';
 import Resume from '@/models/Resume';
 import RoleRequirement from '@/models/RoleRequirement';
 import Roadmap from '@/models/Roadmap';
-import { extractSkillsFromResume, generateRoadmapForGaps } from '@/services/groqService';
-import { calculateSkillGap } from '@/services/skillGapService';
+import { generateRoadmapForGaps, checkATSCompatibility } from '@/services/groqService';
+import { calculateSkillGap, runRuleBasedATSChecks, extractSkillsFromText } from '@/services/skillGapService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,16 +26,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No skill data exists for this role yet. Try a different role.' }, { status: 404 });
     }
 
-    let extractedSkills: string[];
+    // Skill extraction ab pure code se hota hai — reliable, koi AI JSON parsing risk nahi
+    const extractedSkills = extractSkillsFromText(resume.rawText);
+
+    const gapResult = calculateSkillGap(extractedSkills, roleReq.requiredSkills);
+
+    let atsCheck;
     let weeks;
 
     try {
-      extractedSkills = await extractSkillsFromResume(resume.rawText);
+      const aiATSCheck = await checkATSCompatibility(resume.rawText);
+      const ruleCheck = runRuleBasedATSChecks(resume.rawText);
+      const combinedScore = Math.round((aiATSCheck.score + ruleCheck.score) / 2);
 
-      const gapResult = calculateSkillGap(extractedSkills, roleReq.requiredSkills);
+      atsCheck = {
+        score: combinedScore,
+        issues: [...ruleCheck.issues, ...aiATSCheck.issues],
+        suggestions: aiATSCheck.suggestions
+      };
 
       resume.extractedSkills = extractedSkills;
       resume.analysis = gapResult;
+      resume.atsCheck = atsCheck;
       await resume.save();
 
       weeks = await generateRoadmapForGaps(gapResult.missingSkills, resume.targetRole);
@@ -56,6 +68,7 @@ export async function POST(request: NextRequest) {
       message: 'Analysis complete',
       extractedSkills,
       analysis: resume.analysis,
+      atsCheck: resume.atsCheck,
       roadmapId: roadmap._id,
       roadmap: weeks
     });

@@ -3,7 +3,6 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-// require() use kar rahe hain taake dotenv config ke BAAD load ho (import hoisting se bachne ke liye)
 const connectDB = require('../lib/db').default;
 const RoleRequirement = require('../models/RoleRequirement').default;
 
@@ -32,7 +31,6 @@ const rolesData = [
       { skill: 'TensorFlow', priority: 'good-to-have' },
       { skill: 'PyTorch', priority: 'good-to-have' },
       { skill: 'SQL', priority: 'must-have' },
-      { skill: 'Statistics', priority: 'must-have' },
     ]
   },
   {
@@ -54,9 +52,8 @@ const rolesData = [
       { skill: 'SQL', priority: 'must-have' },
       { skill: 'Pandas', priority: 'must-have' },
       { skill: 'Data Visualization', priority: 'must-have' },
-      { skill: 'Machine Learning', priority: 'must-have' },
-      { skill: 'Statistics', priority: 'must-have' },
       { skill: 'Power BI', priority: 'good-to-have' },
+      { skill: 'Tableau', priority: 'good-to-have' },
     ]
   },
   {
@@ -79,8 +76,106 @@ const rolesData = [
       { skill: 'MongoDB', priority: 'must-have' },
       { skill: 'SQL', priority: 'must-have' },
       { skill: 'REST API', priority: 'must-have' },
-      { skill: 'Authentication (JWT)', priority: 'must-have' },
       { skill: 'Docker', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'digital-marketing',
+    requiredSkills: [
+      { skill: 'SEO', priority: 'must-have' },
+      { skill: 'Google Ads', priority: 'must-have' },
+      { skill: 'Content Marketing', priority: 'must-have' },
+      { skill: 'Social Media Marketing', priority: 'must-have' },
+      { skill: 'Google Analytics', priority: 'must-have' },
+      { skill: 'Email Marketing', priority: 'good-to-have' },
+      { skill: 'HubSpot', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'sales',
+    requiredSkills: [
+      { skill: 'Lead Generation', priority: 'must-have' },
+      { skill: 'Negotiation', priority: 'must-have' },
+      { skill: 'CRM Software', priority: 'must-have' },
+      { skill: 'Salesforce', priority: 'good-to-have' },
+      { skill: 'Account Management', priority: 'must-have' },
+      { skill: 'Closing Deals', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'human-resources',
+    requiredSkills: [
+      { skill: 'Recruitment', priority: 'must-have' },
+      { skill: 'Talent Acquisition', priority: 'must-have' },
+      { skill: 'Onboarding', priority: 'must-have' },
+      { skill: 'Employee Relations', priority: 'must-have' },
+      { skill: 'HRIS', priority: 'good-to-have' },
+      { skill: 'Payroll Management', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'finance-accounting',
+    requiredSkills: [
+      { skill: 'Financial Analysis', priority: 'must-have' },
+      { skill: 'Financial Reporting', priority: 'must-have' },
+      { skill: 'Excel', priority: 'must-have' },
+      { skill: 'QuickBooks', priority: 'good-to-have' },
+      { skill: 'Bookkeeping', priority: 'must-have' },
+      { skill: 'Auditing', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'graphic-design',
+    requiredSkills: [
+      { skill: 'Adobe Photoshop', priority: 'must-have' },
+      { skill: 'Adobe Illustrator', priority: 'must-have' },
+      { skill: 'Figma', priority: 'must-have' },
+      { skill: 'Typography', priority: 'must-have' },
+      { skill: 'Branding', priority: 'good-to-have' },
+      { skill: 'Adobe InDesign', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'content-writing',
+    requiredSkills: [
+      { skill: 'Content Writing', priority: 'must-have' },
+      { skill: 'SEO Writing', priority: 'must-have' },
+      { skill: 'Editing', priority: 'must-have' },
+      { skill: 'Proofreading', priority: 'must-have' },
+      { skill: 'Content Strategy', priority: 'good-to-have' },
+      { skill: 'WordPress', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'customer-support',
+    requiredSkills: [
+      { skill: 'Customer Service', priority: 'must-have' },
+      { skill: 'Zendesk', priority: 'good-to-have' },
+      { skill: 'Ticketing Systems', priority: 'must-have' },
+      { skill: 'Conflict Resolution', priority: 'must-have' },
+      { skill: 'Customer Satisfaction', priority: 'must-have' },
+    ]
+  },
+  {
+    role: 'project-management',
+    requiredSkills: [
+      { skill: 'Agile', priority: 'must-have' },
+      { skill: 'Scrum', priority: 'must-have' },
+      { skill: 'Jira', priority: 'must-have' },
+      { skill: 'Stakeholder Management', priority: 'must-have' },
+      { skill: 'Risk Management', priority: 'good-to-have' },
+      { skill: 'Budgeting', priority: 'good-to-have' },
+    ]
+  },
+  {
+    role: 'teaching-education',
+    requiredSkills: [
+      { skill: 'Curriculum Development', priority: 'must-have' },
+      { skill: 'Lesson Planning', priority: 'must-have' },
+      { skill: 'Classroom Management', priority: 'must-have' },
+      { skill: 'Student Assessment', priority: 'must-have' },
+      { skill: 'E-Learning', priority: 'good-to-have' },
+      { skill: 'LMS', priority: 'good-to-have' },
     ]
   }
 ];

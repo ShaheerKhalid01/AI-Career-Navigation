@@ -7,14 +7,17 @@ import jwt from 'jsonwebtoken';
 import { generateRoadmapForGaps, checkATSCompatibility } from '@/services/groqService';
 import { calculateSkillGap, runRuleBasedATSChecks, extractSkillsFromText } from '@/services/skillGapService';
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is not set');
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET environment variable is not set');
+  return secret;
+}
 
 function getUserId(req: NextRequest): string | null {
   try {
     const auth = req.headers.get('authorization');
     if (!auth?.startsWith('Bearer ')) return null;
-    const decoded = jwt.verify(auth.slice(7), JWT_SECRET) as unknown as { userId: string };
+    const decoded = jwt.verify(auth.slice(7), getJwtSecret()) as unknown as { userId: string };
     return decoded.userId;
   } catch {
     return null;

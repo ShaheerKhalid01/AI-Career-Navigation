@@ -3,8 +3,11 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is not set');
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET environment variable is not set');
+  return secret;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +16,7 @@ export async function POST(request: NextRequest) {
     if (!auth?.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const decoded = jwt.verify(auth.slice(7), JWT_SECRET) as unknown as { userId: string };
+    const decoded = jwt.verify(auth.slice(7), getJwtSecret()) as unknown as { userId: string };
     const { jobId } = await request.json();
     
     const user = await User.findById(decoded.userId);

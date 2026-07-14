@@ -187,7 +187,7 @@ async function seed() {
     await RoleRequirement.findOneAndUpdate(
       { role: roleData.role },
       roleData,
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     console.log(`Seeded: ${roleData.role}`);
   }

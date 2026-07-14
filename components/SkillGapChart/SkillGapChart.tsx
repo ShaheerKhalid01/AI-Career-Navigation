@@ -10,13 +10,17 @@ interface SkillGapChartProps {
 export default function SkillGapChart({ matched, missing }: SkillGapChartProps) {
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 hover-lift">
         <p className="font-mono text-xs tracking-widest text-[var(--success)] uppercase mb-3">
           Onboard ({matched.length})
         </p>
         <div className="flex flex-col gap-2">
-          {matched.map((skill) => (
-            <div key={skill} className="flex items-center gap-2 text-sm text-[var(--text)]">
+          {matched.map((skill, i) => (
+            <div
+              key={skill}
+              className="flex items-center gap-2 text-sm text-[var(--text)] animate-fade-in-up"
+              style={{ animationDelay: `${i * 40}ms`, opacity: 0 }}
+            >
               <Check size={14} className="text-[var(--success)] shrink-0" />
               {skill}
             </div>
@@ -24,13 +28,17 @@ export default function SkillGapChart({ matched, missing }: SkillGapChartProps) 
         </div>
       </div>
 
-      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 hover-lift">
         <p className="font-mono text-xs tracking-widest text-[var(--danger)] uppercase mb-3">
           Gap ({missing.length})
         </p>
         <div className="flex flex-col gap-2">
-          {missing.map((skill) => (
-            <div key={skill} className="flex items-center gap-2 text-sm text-[var(--text)]">
+          {missing.map((skill, i) => (
+            <div
+              key={skill}
+              className="flex items-center gap-2 text-sm text-[var(--text)] animate-fade-in-up"
+              style={{ animationDelay: `${i * 40}ms`, opacity: 0 }}
+            >
               <X size={14} className="text-[var(--danger)] shrink-0" />
               {skill}
             </div>

@@ -3,12 +3,32 @@ import connectDB from '@/lib/db';
 import Resume from '@/models/Resume';
 import RoleRequirement from '@/models/RoleRequirement';
 import Roadmap from '@/models/Roadmap';
+import jwt from 'jsonwebtoken';
 import { generateRoadmapForGaps, checkATSCompatibility } from '@/services/groqService';
 import { calculateSkillGap, runRuleBasedATSChecks, extractSkillsFromText } from '@/services/skillGapService';
+
+const JWT_SECRET = process.env.JWT_SECRET as string;
+if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is not set');
+
+function getUserId(req: NextRequest): string | null {
+  try {
+    const auth = req.headers.get('authorization');
+    if (!auth?.startsWith('Bearer ')) return null;
+    const decoded = jwt.verify(auth.slice(7), JWT_SECRET) as unknown as { userId: string };
+    return decoded.userId;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
+
+    const userId = getUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const { resumeId } = await request.json();
 
@@ -27,7 +47,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Skill extraction ab pure code se hota hai — reliable, koi AI JSON parsing risk nahi
-    const extractedSkills = extractSkillsFromText(resume.rawText);
+    const roleSkillNames = roleReq.requiredSkills.map((r: { skill: string }) => r.skill);
+    const extractedSkills = extractSkillsFromText(resume.rawText, roleSkillNames);
 
     const gapResult = calculateSkillGap(extractedSkills, roleReq.requiredSkills);
 
@@ -60,6 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const roadmap = await Roadmap.create({
+      userId,
       resumeId: resume._id,
       weeks
     });
@@ -69,6 +91,7 @@ export async function POST(request: NextRequest) {
       extractedSkills,
       analysis: resume.analysis,
       atsCheck: resume.atsCheck,
+      rawText: resume.rawText,
       roadmapId: roadmap._id,
       roadmap: weeks
     });

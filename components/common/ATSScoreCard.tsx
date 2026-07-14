@@ -12,12 +12,12 @@ export default function ATSScoreCard({ score, issues, suggestions }: ATSScoreCar
   const scoreColor = score >= 75 ? 'var(--success)' : score >= 50 ? 'var(--accent)' : 'var(--danger)';
 
   return (
-    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6">
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6 hover-lift">
       <div className="flex items-center justify-between mb-4">
         <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase">
           Radar Signal — ATS Compatibility
         </p>
-        <span className="font-mono text-2xl font-semibold" style={{ color: scoreColor }}>
+        <span className="font-mono text-2xl font-semibold transition-number" style={{ color: scoreColor }}>
           {score}
         </span>
       </div>
@@ -30,7 +30,11 @@ export default function ATSScoreCard({ score, issues, suggestions }: ATSScoreCar
           </p>
           <ul className="space-y-1.5">
             {issues.map((issue, i) => (
-              <li key={i} className="text-sm text-[var(--text)] pl-4 relative before:content-['—'] before:absolute before:left-0 before:text-[var(--text-muted)]">
+              <li
+                key={i}
+                className="text-sm text-[var(--text)] pl-4 relative before:content-['—'] before:absolute before:left-0 before:text-[var(--text-muted)] animate-fade-in-up"
+                style={{ animationDelay: `${i * 50}ms`, opacity: 0 }}
+              >
                 {issue}
               </li>
             ))}
@@ -46,7 +50,11 @@ export default function ATSScoreCard({ score, issues, suggestions }: ATSScoreCar
           </p>
           <ul className="space-y-1.5">
             {suggestions.map((s, i) => (
-              <li key={i} className="text-sm text-[var(--text)] pl-4 relative before:content-['—'] before:absolute before:left-0 before:text-[var(--text-muted)]">
+              <li
+                key={i}
+                className="text-sm text-[var(--text)] pl-4 relative before:content-['—'] before:absolute before:left-0 before:text-[var(--text-muted)] animate-fade-in-up"
+                style={{ animationDelay: `${i * 50}ms`, opacity: 0 }}
+              >
                 {s}
               </li>
             ))}

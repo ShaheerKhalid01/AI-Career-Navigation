@@ -1,13 +1,31 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 interface ReadinessScoreProps {
   score: number;
 }
 
 export default function ReadinessScore({ score }: ReadinessScoreProps) {
+  const [displayScore, setDisplayScore] = useState(0);
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
+  const offset = circumference - (displayScore / 100) * circumference;
+
+  useEffect(() => {
+    let start = 0;
+    const duration = 1200;
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(Math.round(eased * score));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, [score]);
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -23,11 +41,11 @@ export default function ReadinessScore({ score }: ReadinessScoreProps) {
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+            style={{ transition: 'stroke-dashoffset 0.1s linear' }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-4xl font-semibold text-[var(--text)]">{score}%</span>
+          <span className="font-mono text-4xl font-semibold text-[var(--text)] transition-number">{displayScore}%</span>
           <span className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] mt-1">READY</span>
         </div>
       </div>

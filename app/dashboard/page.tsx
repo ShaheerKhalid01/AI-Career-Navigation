@@ -6,10 +6,12 @@ import ReadinessScore from '@/components/ReadinessScore/ReadinessScore';
 import SkillGapChart from '@/components/SkillGapChart/SkillGapChart';
 import RoadmapView from '@/components/RoadmapView/RoadmapView';
 import ATSScoreCard from '@/components/common/ATSScoreCard';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download, Users } from 'lucide-react';
+import { generateRoadmapPdf } from '@/lib/pdfGenerator';
 
 interface AnalyzeResult {
   extractedSkills: string[];
+  targetRole?: string;
   analysis: {
     matchedSkills: string[];
     missingSkills: string[];
@@ -43,16 +45,45 @@ export default function Dashboard() {
 
   if (!data) return null;
 
+  const handleDownloadPdf = () => {
+    generateRoadmapPdf({
+      targetRole: data.targetRole || 'target-role',
+      readinessScore: data.analysis.readinessScore,
+      matchedSkills: data.analysis.matchedSkills,
+      missingSkills: data.analysis.missingSkills,
+      weeks: data.roadmap,
+    });
+  };
+
   return (
     <main className="min-h-screen radar-bg px-4 py-10">
       <div className="max-w-3xl mx-auto">
-        <button
-          onClick={() => router.push('/')}
-          className="flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)] mb-8 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          New flight plan
-        </button>
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+          >
+            <ArrowLeft size={16} />
+            New flight plan
+          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push(`/community/${data.targetRole || 'software-development'}`)}
+              className="flex items-center gap-2 text-sm border border-[var(--border)] text-[var(--text)] px-4 py-2 rounded-lg hover:border-[var(--accent)] transition-colors"
+            >
+              <Users size={15} />
+              Community
+            </button>
+            <button
+              onClick={handleDownloadPdf}
+              className="flex items-center gap-2 text-sm bg-[var(--accent)] text-[var(--bg)] px-4 py-2 rounded-lg hover:bg-[var(--accent-dim)] transition-colors font-medium"
+            >
+              <Download size={15} />
+              Download PDF
+            </button>
+          </div>
+        </div>
 
         <div className="mb-10">
           <span className="font-mono text-xs tracking-widest text-[var(--accent)]">MISSION BRIEFING</span>

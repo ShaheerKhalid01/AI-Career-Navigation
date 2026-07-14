@@ -13,6 +13,15 @@ function normalize(skill: string): string {
   return skill.toLowerCase().replace(/[.\-\s]/g, '');
 }
 
+function wordBoundaryMatch(text: string, word: string): boolean {
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(text);
+}
+
+function fuzzyMatch(normalizedText: string, normalizedWord: string): boolean {
+  return wordBoundaryMatch(normalizedText, normalizedWord) || normalizedText.includes(normalizedWord);
+}
+
 export function calculateSkillGap(
   extractedSkills: string[],
   requiredSkills: RequiredSkill[]
@@ -25,7 +34,7 @@ export function calculateSkillGap(
   for (const req of requiredSkills) {
     const normalizedReq = normalize(req.skill);
     const isMatched = normalizedExtracted.some(
-      (extracted) => extracted.includes(normalizedReq) || normalizedReq.includes(extracted)
+      (extracted) => fuzzyMatch(extracted, normalizedReq)
     );
 
     if (isMatched) {
@@ -67,22 +76,25 @@ export function runRuleBasedATSChecks(resumeText: string): RuleBasedCheck {
     deductions += 15;
   }
 
-  const hasPhone = /(\+?\d{1,3}[-.\s]?)?\(?\d{3,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/.test(resumeText);
+  const hasPhone = /(\+?\d{1,3}[-.\s()]?)?\(?\d{3,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/.test(resumeText);
   if (!hasPhone) {
     issues.push('No phone number detected.');
     deductions += 10;
   }
 
-  const sectionKeywords = ['experience', 'education', 'skills', 'summary', 'projects'];
+  const sectionKeywords = ['experience', 'education', 'skills', 'summary', 'projects', 'work', 'employment', 'qualification', 'background', 'objective', 'profile', 'certification', 'training', 'languages', 'interests', 'publication', 'references'];
   const lowerText = resumeText.toLowerCase();
-  const foundSections = sectionKeywords.filter((kw) => lowerText.includes(kw));
+  const foundSections = sectionKeywords.filter((kw) => {
+    const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(resumeText);
+  });
 
   if (foundSections.length < 3) {
     issues.push('Missing standard section headers (Experience, Education, Skills, etc.) — ATS relies on these to categorize content.');
     deductions += 20;
   }
 
-  const hasNumbers = /\d+%|\d+\+|\$\d+|\d+ (users|students|projects|clients|team)/i.test(resumeText);
+  const hasNumbers = /\d+%|\d+\+|\$\d+|\d+ (users|students|projects|clients|team|customers|revenue|sales)/i.test(resumeText);
   if (!hasNumbers) {
     issues.push('No quantifiable achievements found (numbers, percentages, metrics) — these strengthen impact statements.');
     deductions += 15;
@@ -102,7 +114,7 @@ export function runRuleBasedATSChecks(resumeText: string): RuleBasedCheck {
 // Master skill dictionary — combines multiple career domains
 const COMMON_TECH_SKILLS = [
   // Software / Tech
-  'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin',
+  'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Rust', 'Swift', 'Kotlin',
   'React', 'Next.js', 'Vue', 'Angular', 'Redux', 'Redux Toolkit', 'Node.js', 'Express.js', 'NestJS',
   'HTML5', 'HTML', 'CSS3', 'CSS', 'Tailwind CSS', 'Bootstrap', 'Sass', 'Material-UI',
   'MongoDB', 'MySQL', 'PostgreSQL', 'SQLite', 'Redis', 'Firebase', 'SQL',
@@ -120,7 +132,7 @@ const COMMON_TECH_SKILLS = [
   'UI/UX Design', 'Wireframing', 'Prototyping', 'Typography', 'Branding', 'Canva',
 
   // Data / Analytics
-  'Power BI', 'Tableau', 'Excel', 'R', 'Google Analytics', 'Google Data Studio', 'Data Visualization',
+  'Power BI', 'Tableau', 'Excel', 'Google Analytics', 'Google Data Studio', 'Data Visualization',
 
   // Project Management
   'Agile', 'Scrum', 'Kanban', 'Jira', 'Trello', 'Asana', 'Monday.com', 'Risk Management',
@@ -159,11 +171,12 @@ const COMMON_TECH_SKILLS = [
   'Student Assessment', 'E-Learning', 'Google Classroom', 'LMS',
 
   // General / Soft
-  'Leadership', 'Communication', 'Problem Solving', 'Team Management', 'Time Management',
-  'Public Speaking', 'Critical Thinking', 'Microsoft Office', 'PowerPoint', 'Word'
+  'Problem Solving', 'Team Management', 'Time Management',
+  'Public Speaking', 'Critical Thinking', 'Microsoft Office', 'PowerPoint'
 ];
 
 const SKILL_ALIASES: Record<string, string[]> = {
+  'JavaScript': ['javascript', 'js'],
   'Git': ['git', 'github', 'gitlab', 'bitbucket', 'version control'],
   'Node.js': ['node.js', 'nodejs', 'node js', 'node'],
   'Next.js': ['next.js', 'nextjs', 'next js'],
@@ -175,6 +188,13 @@ const SKILL_ALIASES: Record<string, string[]> = {
   'Excel': ['excel', 'ms excel', 'microsoft excel'],
   'PowerPoint': ['powerpoint', 'ms powerpoint', 'microsoft powerpoint'],
   'Word': ['ms word', 'microsoft word'],
+  'TypeScript': ['typescript', 'ts'],
+  'Python': ['python'],
+  'React': ['react', 'reactjs', 'react js'],
+  'Docker': ['docker', 'docker compose', 'docker-compose', 'dockerized', 'dockerfile', 'containerization', 'container'],
+  'Kubernetes': ['kubernetes', 'k8s'],
+  'React Native': ['react native', 'reactnative'],
+  'CI/CD': ['ci/cd', 'cicd', 'ci cd', 'continuous integration', 'continuous deployment'],
 };
 
 function addBoundariesForConcatenatedText(text: string): string {
@@ -195,14 +215,16 @@ function textContainsSkill(originalLowerText: string, spacedLowerText: string, s
   return false;
 }
 
-export function extractSkillsFromText(resumeText: string): string[] {
+export function extractSkillsFromText(resumeText: string, relevantSkills?: string[]): string[] {
   const found: string[] = [];
 
   const originalLowerText = resumeText.toLowerCase();
   const spacedText = addBoundariesForConcatenatedText(resumeText);
   const spacedLowerText = spacedText.toLowerCase();
 
-  for (const skill of COMMON_TECH_SKILLS) {
+  const skillsToCheck = relevantSkills && relevantSkills.length > 0 ? relevantSkills : COMMON_TECH_SKILLS;
+
+  for (const skill of skillsToCheck) {
     if (textContainsSkill(originalLowerText, spacedLowerText, skill)) {
       found.push(skill);
     }

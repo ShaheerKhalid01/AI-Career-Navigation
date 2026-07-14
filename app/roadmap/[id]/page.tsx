@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/AuthContext';
 import ReadinessScore from '@/components/ReadinessScore/ReadinessScore';
 import SkillGapChart from '@/components/SkillGapChart/SkillGapChart';
 import RoadmapView from '@/components/RoadmapView/RoadmapView';
@@ -25,6 +26,7 @@ interface RoadmapData {
 export default function RoadmapPage() {
   const params = useParams();
   const router = useRouter();
+  const { token } = useAuth();
   const [data, setData] = useState<RoadmapData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,9 @@ export default function RoadmapPage() {
   useEffect(() => {
     async function fetchRoadmap() {
       try {
-        const res = await fetch(`/api/roadmap/${params.id}`);
+        const headers: HeadersInit = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`/api/roadmap/${params.id}`, { headers });
         const json = await res.json();
 
         if (!res.ok) {

@@ -1,15 +1,16 @@
 import groq from '@/lib/groq';
+import { findCuratedResource, getFallbackResource } from '@/lib/resourceLinks';
 
-function safeJsonParse(content: string, fallback: any): any {
+function safeJsonParse<T>(content: string, fallback: T): T {
   const cleaned = content.replace(/```json|```/g, '').trim();
 
   try {
-    return JSON.parse(cleaned);
+    return JSON.parse(cleaned) as T;
   } catch {
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
-        return JSON.parse(jsonMatch[0]);
+        return JSON.parse(jsonMatch[0]) as T;
       } catch {
         console.error('Could not parse extracted JSON:', jsonMatch[0].substring(0, 300));
         return fallback;
@@ -59,28 +60,35 @@ export async function generateRoadmapForGaps(
   targetRole: string
 ): Promise<RoadmapWeek[]> {
   if (missingSkills.length === 0) {
-    return [{
-      weekNumber: 1,
-      topics: ['You already have all the required skills for this role'],
-      resources: [],
-      miniProjects: ['Consider building an advanced project to showcase your expertise']
-    }];
+    const defaultWeeks = Array.from({ length: 6 }, (_, i) => ({
+      weekNumber: i + 1,
+      topics: [`Advanced ${targetRole} skill building`, `Portfolio project week ${i + 1}`],
+      resources: [] as { title: string; url: string }[],
+      miniProjects: [`Build an advanced ${targetRole} feature or case study`],
+    }));
+    for (const week of defaultWeeks) {
+      for (const topic of week.topics.slice(0, 2)) {
+        const curated = findCuratedResource(topic);
+        week.resources.push(curated || getFallbackResource(topic));
+      }
+    }
+    return defaultWeeks;
   }
 
   const prompt = `Target role: ${targetRole}
 Skills the candidate is missing: ${JSON.stringify(missingSkills)}
 
-Generate a week-by-week learning roadmap (6 weeks) to help them learn ONLY these missing skills. Be concise.
+Generate a week-by-week learning plan covering exactly 6 weeks (week 1 through week 6) to help them learn ONLY these missing skills. Every week must be included. Do NOT include any resource links or URLs. Be concise.
 
 Format:
 {
   "roadmap": [
-    {
-      "weekNumber": 1,
-      "topics": ["topic1", "topic2"],
-      "resources": [{"title": "resource name", "url": "https://..."}],
-      "miniProjects": ["mini project idea"]
-    }
+    { "weekNumber": 1, "topics": ["topic1", "topic2"], "miniProjects": ["mini project idea"] },
+    { "weekNumber": 2, "topics": ["topic3", "topic4"], "miniProjects": ["mini project idea"] },
+    { "weekNumber": 3, "topics": ["topic5", "topic6"], "miniProjects": ["mini project idea"] },
+    { "weekNumber": 4, "topics": ["topic7", "topic8"], "miniProjects": ["mini project idea"] },
+    { "weekNumber": 5, "topics": ["topic9", "topic10"], "miniProjects": ["mini project idea"] },
+    { "weekNumber": 6, "topics": ["topic11", "topic12"], "miniProjects": ["mini project idea"] }
   ]
 }`;
 
@@ -91,12 +99,48 @@ Format:
     ],
     model: 'llama-3.1-8b-instant',
     temperature: 0.3,
-    max_tokens: 2500,
+    max_tokens: 3000,
   });
 
   const content = response.choices[0].message.content || '{"roadmap":[]}';
   const parsed = safeJsonParse(content, { roadmap: [] });
-  return parsed.roadmap || [];
+  let rawWeeks: any[] = parsed.roadmap || [];
+
+  // Guarantee exactly 6 weeks — pad if AI returns fewer, trim if more
+  const TOTAL_WEEKS = 6;
+  if (rawWeeks.length < TOTAL_WEEKS) {
+    const existing = rawWeeks.map((w: any) => w.weekNumber);
+    for (let i = 1; i <= TOTAL_WEEKS; i++) {
+      if (!existing.includes(i)) {
+        const skillIdx = (i - 1) % Math.max(missingSkills.length, 1);
+        rawWeeks.push({
+          weekNumber: i,
+          topics: [`Practice: ${missingSkills[skillIdx]}`, `Build with ${missingSkills[skillIdx]}`],
+          miniProjects: [`Apply ${missingSkills[skillIdx]} in a real project`],
+        });
+      }
+    }
+    rawWeeks.sort((a: any, b: any) => a.weekNumber - b.weekNumber);
+  }
+  rawWeeks = rawWeeks.slice(0, TOTAL_WEEKS);
+
+  // Har week ke topics ke liye khud se curated/reliable links attach karte hain
+  return rawWeeks.map((week: any) => {
+    const resources: { title: string; url: string }[] = [];
+    const topics: string[] = week.topics || [];
+
+    for (const topic of topics.slice(0, 2)) {
+      const curated = findCuratedResource(topic);
+      resources.push(curated || getFallbackResource(topic));
+    }
+
+    return {
+      weekNumber: week.weekNumber,
+      topics: topics,
+      resources,
+      miniProjects: week.miniProjects || [],
+    };
+  });
 }
 
 interface ATSCheckResult {

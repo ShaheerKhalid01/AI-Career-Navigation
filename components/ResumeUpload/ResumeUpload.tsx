@@ -42,10 +42,13 @@ export default function ResumeUpload({ onFileSelect }: ResumeUploadProps) {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors
-            ${isDragging ? 'border-[var(--accent)] bg-[var(--surface-hover)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}
+          className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-all duration-200
+            ${isDragging ? 'border-[var(--accent)] bg-[var(--surface-hover)] scale-[1.02]' : 'border-[var(--border)] bg-[var(--surface)]'}`}
         >
-          <UploadCloud className="mx-auto mb-3 text-[var(--accent)]" size={32} />
+          <UploadCloud
+            className={`mx-auto mb-3 text-[var(--accent)] transition-transform duration-200 ${isDragging ? 'scale-125' : 'animate-float'}`}
+            size={32}
+          />
           <p className="text-sm text-[var(--text)]">Drop your resume here, or click to browse</p>
           <p className="font-mono text-xs text-[var(--text-muted)] mt-2">PDF or DOCX — max 5MB</p>
           <input
@@ -57,7 +60,7 @@ export default function ResumeUpload({ onFileSelect }: ResumeUploadProps) {
           />
         </div>
       ) : (
-        <div className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] rounded-lg px-4 py-3">
+        <div className="flex items-center justify-between border border-[var(--border)] bg-[var(--surface)] rounded-lg px-4 py-3 animate-fade-in-up">
           <div className="flex items-center gap-3">
             <FileText className="text-[var(--accent)]" size={20} />
             <span className="text-sm text-[var(--text)] truncate max-w-[240px]">{file.name}</span>

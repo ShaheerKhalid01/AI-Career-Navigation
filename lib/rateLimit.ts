@@ -1,4 +1,13 @@
-const requestCounts = new Map<string, { count: number; resetAt: number }>();
+// Use global cache for serverless compatibility
+declare global {
+  var rateLimitCache: Map<string, { count: number; resetAt: number }> | undefined;
+}
+
+const requestCounts = global.rateLimitCache || new Map<string, { count: number; resetAt: number }>();
+
+if (process.env.NODE_ENV !== 'production') {
+  (global as any).rateLimitCache = requestCounts;
+}
 
 export function rateLimit(ip: string, limit = 30, windowMs = 60000): boolean {
   const now = Date.now();

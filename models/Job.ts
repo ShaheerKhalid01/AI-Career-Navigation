@@ -8,6 +8,7 @@ export interface IJob extends Document {
   requirements: string[];
   role: string;
   url: string;
+  postedBy?: string;
   postedAt: Date;
   createdAt: Date;
 }
@@ -20,6 +21,7 @@ const jobSchema: Schema<IJob> = new Schema({
   requirements: [{ type: String }],
   role: { type: String, index: true },
   url: { type: String },
+  postedBy: { type: String },
   postedAt: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now },
 });

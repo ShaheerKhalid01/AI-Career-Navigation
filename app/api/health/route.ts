@@ -1,4 +1,5 @@
 import connectDB from '@/lib/db';
+import groq from '@/lib/groq';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -6,20 +7,42 @@ export async function GET() {
     env: {
       mongoUri: !!process.env.MONGO_URI,
       jwtSecret: !!process.env.JWT_SECRET,
+      groqApiKey: !!process.env.GROQ_API_KEY,
     },
-    database: 'not_checked'
+    database: 'not_checked',
+    groq: 'not_checked',
   };
 
+  // Check MongoDB
   try {
     await connectDB();
     checks.database = 'connected';
-    return NextResponse.json({ status: 'healthy', checks });
   } catch (error) {
     console.error('Health check error:', error);
     checks.database = 'failed';
-    return NextResponse.json(
-      { status: 'unhealthy', checks, error: String(error) },
-      { status: 500 }
-    );
   }
+
+  // Check Groq API
+  try {
+    await groq.chat.completions.create({
+      messages: [{ role: 'user', content: 'test' }],
+      model: 'llama-3.1-8b-instant',
+      max_tokens: 1,
+    });
+    checks.groq = 'connected';
+  } catch (error) {
+    console.error('Groq health check error:', error);
+    checks.groq = 'failed';
+  }
+
+  const isHealthy = checks.database === 'connected' && checks.groq === 'connected';
+  
+  return NextResponse.json(
+    { 
+      status: isHealthy ? 'healthy' : 'unhealthy',
+      checks,
+      timestamp: new Date().toISOString()
+    },
+    { status: isHealthy ? 200 : 503 }
+  );
 }

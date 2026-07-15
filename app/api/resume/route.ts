@@ -12,6 +12,31 @@ const VALID_ROLES = [
   'teaching-education'
 ];
 
+// PDF file signature (magic numbers)
+const PDF_SIGNATURE = [0x25, 0x50, 0x44, 0x46];
+// DOCX file signature (ZIP format)
+const DOCX_SIGNATURE = [0x50, 0x4B, 0x03, 0x04];
+
+function validateFileContent(buffer: Buffer, extension: string): boolean {
+  const header = buffer.slice(0, 4);
+  
+  if (extension === 'pdf') {
+    return header[0] === PDF_SIGNATURE[0] && 
+           header[1] === PDF_SIGNATURE[1] && 
+           header[2] === PDF_SIGNATURE[2] && 
+           header[3] === PDF_SIGNATURE[3];
+  }
+  
+  if (extension === 'docx') {
+    return header[0] === DOCX_SIGNATURE[0] && 
+           header[1] === DOCX_SIGNATURE[1] && 
+           header[2] === DOCX_SIGNATURE[2] && 
+           header[3] === DOCX_SIGNATURE[3];
+  }
+  
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -44,11 +69,20 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Validate file content matches extension
+    if (!validateFileContent(buffer, extension)) {
+      return NextResponse.json({ error: 'File content does not match the file extension. The file may be corrupted or renamed.' }, { status: 400 });
+    }
+
     let rawText: string;
     try {
       rawText = await parseResume(buffer, file.name);
     } catch (parseErr) {
       console.error('Parse error:', parseErr);
+      if (parseErr instanceof Error) {
+        console.error('Error message:', parseErr.message);
+        console.error('Error stack:', parseErr.stack);
+      }
       return NextResponse.json({ error: 'Could not read this file. It may be corrupted or password-protected.' }, { status: 422 });
     }
 
@@ -72,6 +106,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Resume upload error:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return NextResponse.json({ error: 'Something went wrong while processing your resume. Please try again.' }, { status: 500 });
   }
 }

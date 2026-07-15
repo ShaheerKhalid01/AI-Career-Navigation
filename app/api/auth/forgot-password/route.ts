@@ -3,12 +3,22 @@ import connectDB from '@/lib/db';
 import User from '@/models/User';
 import crypto from 'crypto';
 
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
     const { email } = await request.json();
+    
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
+    }
+
+    if (!validateEmail(email)) {
+      return NextResponse.json({ error: 'Please provide a valid email address.' }, { status: 400 });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
@@ -30,6 +40,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Forgot password error:', error);
-    return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    return NextResponse.json({ error: 'Failed to process password reset request.' }, { status: 500 });
   }
 }

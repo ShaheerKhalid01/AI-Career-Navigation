@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import groq from '@/lib/groq';
+import { rateLimit, getRateLimitHeaders } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    
+    // Stricter rate limiting for AI endpoints (3 requests per minute)
+    if (!rateLimit(ip, 3, 60000)) {
+      return NextResponse.json(
+        { error: 'Too many AI requests. Please try again later.' },
+        { status: 429, headers: getRateLimitHeaders(ip, 3, 60000) }
+      );
+    }
+
     const { targetRole, skills } = await request.json();
+
+    if (!targetRole) {
+      return NextResponse.json({ error: 'Target role is required.' }, { status: 400 });
+    }
 
     const prompt = `Generate 5 realistic interview questions for a "${targetRole}" position.
 
@@ -59,7 +74,12 @@ Make questions specific to ${targetRole} role, not generic.`;
     }
 
     return NextResponse.json({ questions });
-  } catch {
+  } catch (error) {
+    console.error('Interview questions generation error:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return NextResponse.json({ error: 'Failed to generate questions' }, { status: 500 });
   }
 }

@@ -11,6 +11,33 @@ function getJwtSecret(): string {
   return secret;
 }
 
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePassword(password: string): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters');
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+  
+  return { valid: errors.length === 0, errors };
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -26,8 +53,14 @@ export async function POST(request: NextRequest) {
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Name, email, and password are required.' }, { status: 400 });
     }
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 });
+
+    if (!validateEmail(email)) {
+      return NextResponse.json({ error: 'Please provide a valid email address.' }, { status: 400 });
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return NextResponse.json({ error: passwordValidation.errors.join('. ') }, { status: 400 });
     }
 
     const existing = await User.findOne({ email: email.toLowerCase() });
@@ -47,6 +80,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Register error:', error);
-    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 });
   }
 }

@@ -40,6 +40,13 @@ Write a compelling, ATS-friendly cover letter that:
 
 Return only the letter text, no preamble or explanation.`;
 
+    if (!groq) {
+      return NextResponse.json(
+        { error: 'AI service is unavailable because GROQ_API_KEY is not configured.' },
+        { status: 503 }
+      );
+    }
+
     const response = await groq.chat.completions.create({
       messages: [
         { role: 'system', content: 'You are a professional career coach and cover letter writer. Write concise, impactful cover letters that pass ATS filters.' },

@@ -43,6 +43,13 @@ Format:
 
 Make questions specific to ${targetRole} role, not generic.`;
 
+    if (!groq) {
+      return NextResponse.json(
+        { error: 'AI service is unavailable because GROQ_API_KEY is not configured.' },
+        { status: 503 }
+      );
+    }
+
     const response = await groq.chat.completions.create({
       messages: [
         { role: 'system', content: 'You are a senior technical recruiter and interview coach. Generate realistic, role-specific interview questions with actionable answering tips.' },

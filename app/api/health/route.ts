@@ -23,16 +23,20 @@ export async function GET() {
   }
 
   // Check Groq API
-  try {
-    await groq.chat.completions.create({
-      messages: [{ role: 'user', content: 'test' }],
-      model: 'llama-3.1-8b-instant',
-      max_tokens: 1,
-    });
-    checks.groq = 'connected';
-  } catch (error) {
-    console.error('Groq health check error:', error);
-    checks.groq = 'failed';
+  if (!groq) {
+    checks.groq = 'not_configured';
+  } else {
+    try {
+      await groq.chat.completions.create({
+        messages: [{ role: 'user', content: 'test' }],
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 1,
+      });
+      checks.groq = 'connected';
+    } catch (error) {
+      console.error('Groq health check error:', error);
+      checks.groq = 'failed';
+    }
   }
 
   const isHealthy = checks.database === 'connected' && checks.groq === 'connected';

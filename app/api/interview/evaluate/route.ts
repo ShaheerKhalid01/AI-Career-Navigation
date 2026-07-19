@@ -40,6 +40,13 @@ Return JSON:
   "sampleAnswer": "a short model answer (2-3 sentences)"
 }`;
 
+    if (!groq) {
+      return NextResponse.json(
+        { error: 'AI service is unavailable because GROQ_API_KEY is not configured.' },
+        { status: 503 }
+      );
+    }
+
     const response = await groq.chat.completions.create({
       messages: [
         { role: 'system', content: 'You are a strict but fair interview coach. Evaluate answers honestly. Scores above 85 are rare.' },

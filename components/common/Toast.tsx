@@ -41,9 +41,9 @@ const config: Record<ToastType, {
     title: 'Success',
     titleColor: 'text-[var(--text)]',
     textColor: 'text-[var(--text)]',
-    lightBg: 'bg-white',
+    lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-emerald-200',
+    lightBorder: 'border-white',
     darkBorder: 'border-emerald-800',
   },
   error: {
@@ -55,9 +55,9 @@ const config: Record<ToastType, {
     title: 'Error',
     titleColor: 'text-[var(--text)]',
     textColor: 'text-[var(--text)]',
-    lightBg: 'bg-white',
+    lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-red-200',
+    lightBorder: 'border-white',
     darkBorder: 'border-red-800',
   },
   info: {
@@ -69,9 +69,9 @@ const config: Record<ToastType, {
     title: 'Info',
     titleColor: 'text-[var(--text)]',
     textColor: 'text-[var(--text)]',
-    lightBg: 'bg-white',
+    lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-blue-200',
+    lightBorder: 'border-white',
     darkBorder: 'border-blue-800',
   },
   warning: {
@@ -83,9 +83,9 @@ const config: Record<ToastType, {
     title: 'Heads up',
     titleColor: 'text-[var(--text)]',
     textColor: 'text-[var(--text)]',
-    lightBg: 'bg-white',
+    lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-amber-200',
+    lightBorder: 'border-white',
     darkBorder: 'border-amber-800',
   },
 };
@@ -144,10 +144,10 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000, th
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <p className={`text-xs font-semibold ${c.titleColor} uppercase tracking-widest mb-0.5`}>
+        <p className={`text-xs font-semibold ${isDark ? c.titleColor : 'text-white'} uppercase tracking-widest mb-0.5`}>
           {c.title}
         </p>
-        <p className={`text-sm font-medium ${c.textColor} leading-snug`}>{msg}</p>
+        <p className={`text-sm font-medium ${isDark ? c.textColor : 'text-white'} leading-snug`}>{msg}</p>
       </div>
 
       {/* Close button */}

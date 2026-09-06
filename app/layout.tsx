@@ -7,6 +7,7 @@ import BottomNav from '@/components/common/BottomNav';
 import { AuthProvider } from '@/lib/AuthContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import StoreProvider from '@/lib/store/StoreProvider';
+import { ToastProvider } from '@/components/common/ToastProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,11 +38,13 @@ export default function RootLayout({
 <AuthProvider>
 <StoreProvider>
 <ThemeProvider>
+<ToastProvider>
 <TopNav />
 <div className="pt-10 md:pt-10">
 {children}
 </div>
 <BottomNav />
+</ToastProvider>
 </ThemeProvider>
 </StoreProvider>
 </AuthProvider></body>

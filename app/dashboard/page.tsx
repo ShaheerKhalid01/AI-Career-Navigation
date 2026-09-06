@@ -37,7 +37,7 @@ export default function Dashboard() {
   useEffect(() => {
     const stored = sessionStorage.getItem('navResult');
     if (!stored) {
-      router.push('/');
+      router.push('/?message=Please upload and analyze your resume first — the dashboard will be available after that.');
       return;
     }
     setData(JSON.parse(stored));

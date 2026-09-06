@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, Suspense, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/lib/store/store';
-import { setAnalysisData, setLoading, setError, setToast, setHasResume } from '@/lib/store/resumeSlice';
+import { setAnalysisData, setLoading, setError, setHasResume } from '@/lib/store/resumeSlice';
 import { generateRoadmapPdf } from '@/lib/pdfGenerator';
 import GradientHeader from '@/components/common/GradientHeader';
+import { useToast } from '@/components/common/ToastProvider';
 
 // Components
 import ResumeWorkspaceToolbar from '@/components/resume/ResumeWorkspaceToolbar';
@@ -17,21 +18,30 @@ import ATSScoreCard from '@/components/resume/ATSScoreCard';
 import SuggestionsList from '@/components/resume/SuggestionsList';
 import SkillMatchSummary from '@/components/resume/SkillMatchSummary';
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const { token } = useAuth();
   const dispatch = useDispatch();
+  const { showToast } = useToast();
   
-  const { loading, error, hasResume, toast, analysisData } = useSelector(
+  const { loading, error, hasResume, analysisData } = useSelector(
     (state: RootState) => state.resume
   );
+  const searchParams = useSearchParams();
 
+  const toastShown = useRef(false);
+
+  // Show toast for messages coming from redirects (e.g. from dashboard)
   useEffect(() => {
-    if (toast) {
-      const t = setTimeout(() => dispatch(setToast(null)), 2500);
-      return () => clearTimeout(t);
+    const message = searchParams.get('message');
+    if (message && !toastShown.current) {
+      toastShown.current = true;
+      showToast(message, 'info');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('message');
+      window.history.replaceState({}, '', url);
     }
-  }, [toast, dispatch]);
+  }, [searchParams, showToast]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('navResult');
@@ -45,7 +55,7 @@ export default function Home() {
 
   const handleDownloadPdf = () => {
     if (!analysisData) {
-      dispatch(setToast({ msg: 'Analyze your resume first to generate a PDF report', type: 'info' }));
+      showToast('Analyze your resume first to generate a PDF report', 'info');
       return;
     }
     try {
@@ -56,9 +66,9 @@ export default function Home() {
         missingSkills: analysisData.analysis?.missingSkills || [],
         weeks: analysisData.roadmap || [],
       });
-      dispatch(setToast({ msg: 'PDF report downloaded!', type: 'success' }));
+      showToast('PDF report downloaded!', 'success');
     } catch {
-      dispatch(setToast({ msg: 'Could not generate PDF. Try analyzing first.', type: 'info' }));
+      showToast('Could not generate PDF. Try analyzing first.', 'warning');
     }
   };
 
@@ -112,13 +122,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[var(--bg)] ">
       <div className="max-w-6xl mx-auto">
-        {toast && (
-          <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-fade-in-up ${
-            toast.type === 'success' ? 'bg-[var(--success)] text-white' : 'bg-[var(--accent)] text-white'
-          }`}>
-            {toast.msg}
-          </div>
-        )}
         
         <GradientHeader
           eyebrow="Resume"
@@ -156,5 +159,13 @@ export default function Home() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg)]" />}>
+      <HomeContent />
+    </Suspense>
   );
 }

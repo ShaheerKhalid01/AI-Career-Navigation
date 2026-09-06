@@ -3,6 +3,29 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, Info, AlertTriangle, XCircle, X } from 'lucide-react';
 
+function useTheme() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkTheme = () => {
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      setIsDark(isDarkMode);
+    };
+
+    checkTheme();
+
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
+
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface ToastProps {
@@ -33,45 +56,45 @@ const config: Record<ToastType, {
   darkBorder: string;
 }> = {
   success: {
-    icon: <CheckCircle size={20} />, 
+    icon: <CheckCircle size={20} />,
     bar: 'bg-emerald-500',
     bg: 'bg-white dark:bg-[#1A1D27]',
     border: 'border-emerald-200 dark:border-emerald-800',
     iconColor: 'text-emerald-500',
     title: 'Success',
-    titleColor: 'text-[var(--text)]',
-    textColor: 'text-[var(--text)]',
+    titleColor: 'text-white',
+    textColor: 'text-white',
     lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-white',
+    lightBorder: 'border-emerald-600',
     darkBorder: 'border-emerald-800',
   },
   error: {
-    icon: <XCircle size={20} />, 
+    icon: <XCircle size={20} />,
     bar: 'bg-red-500',
     bg: 'bg-white dark:bg-[#1A1D27]',
     border: 'border-red-200 dark:border-red-800',
     iconColor: 'text-red-500',
     title: 'Error',
-    titleColor: 'text-[var(--text)]',
-    textColor: 'text-[var(--text)]',
+    titleColor: 'text-white',
+    textColor: 'text-white',
     lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-white',
+    lightBorder: 'border-red-600',
     darkBorder: 'border-red-800',
   },
   info: {
-    icon: <Info size={20} />, 
+    icon: <Info size={20} />,
     bar: 'bg-blue-500',
     bg: 'bg-white dark:bg-[#1A1D27]',
     border: 'border-blue-200 dark:border-blue-800',
     iconColor: 'text-blue-500',
     title: 'Info',
-    titleColor: 'text-[var(--text)]',
-    textColor: 'text-[var(--text)]',
+    titleColor: 'text-white',
+    textColor: 'text-white',
     lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-white',
+    lightBorder: 'border-blue-600',
     darkBorder: 'border-blue-800',
   },
   warning: {
@@ -81,11 +104,11 @@ const config: Record<ToastType, {
     border: 'border-amber-200 dark:border-amber-800',
     iconColor: 'text-amber-500',
     title: 'Heads up',
-    titleColor: 'text-[var(--text)]',
-    textColor: 'text-[var(--text)]',
+    titleColor: 'text-white',
+    textColor: 'text-white',
     lightBg: 'bg-blue-500',
     darkBg: 'bg-[#1A1D27]',
-    lightBorder: 'border-white',
+    lightBorder: 'border-amber-600',
     darkBorder: 'border-amber-800',
   },
 };
@@ -94,8 +117,9 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000, th
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(100);
   const c = config[type];
-  // Determine if we should force dark or light styles
-  const isDark = theme === 'dark' || (!theme && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const systemIsDark = useTheme();
+  // Use forced theme if provided, otherwise use system theme
+  const isDark = theme === 'light' ? false : theme === 'dark' ? true : systemIsDark;
 
   useEffect(() => {
     // Slide in
@@ -126,7 +150,7 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000, th
     <div
       className={`
         relative flex items-start gap-3 w-[340px] max-w-[90vw]
-        ${isDark ? c.darkBg : c.lightBg} border ${isDark ? c.darkBorder : c.lightBorder}
+          ${isDark ? c.darkBg + ' border ' + c.darkBorder + ' text-white' : 'bg-blue-500 border ' + c.lightBorder + ' text-white'}
         rounded-2xl shadow-2xl px-4 pt-4 pb-3 overflow-hidden
         transition-all duration-400 ease-out
         ${visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}
@@ -144,10 +168,10 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000, th
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <p className={`text-xs font-semibold ${isDark ? c.titleColor : 'text-white'} uppercase tracking-widest mb-0.5`}>
+        <p className={`text-xs font-semibold text-white uppercase tracking-widest mb-0.5`}>
           {c.title}
         </p>
-        <p className={`text-sm font-medium ${isDark ? c.textColor : 'text-white'} leading-snug`}>{msg}</p>
+        <p className={`text-sm font-medium text-white leading-snug`}>{msg}</p>
       </div>
 
       {/* Close button */}

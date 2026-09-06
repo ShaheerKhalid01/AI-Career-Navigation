@@ -1,6 +1,13 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from 'react';
+
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -24,58 +31,123 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
   const router = useRouter();
 
+  // Restore authentication state when app starts
   useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('auth_user');
-    if (storedToken && storedUser) {
+
+    if (storedUser) {
       try {
-        setToken(storedToken);
         setUser(JSON.parse(storedUser));
-      } catch { /* ignore */ }
+      } catch {
+        localStorage.removeItem('auth_user');
+      }
     }
+    // for refresh the use effect used for useState function vlaeu persists (reset state result avoidance)
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+
+      headers: {
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify({
+        email,
+        password,
+      }),
     });
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('auth_user', JSON.stringify(data.user));
-    setToken(data.token);
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+
+    // Store only non-sensitive user information on client
+    localStorage.setItem(
+      'auth_user',
+      JSON.stringify(data.user)
+    );
+
+    // Update React state
     setUser(data.user);
+
+    // JWT should be stored in HttpOnly cookie
+    // by the login API, not localStorage.
+    setToken(null);
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string
+  ) => {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+
+      headers: {
+        'Content-Type': 'application/json',
+      },
+
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+      }),
     });
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Registration failed');
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('auth_user', JSON.stringify(data.user));
-    setToken(data.token);
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Registration failed');
+    }
+
+    // Store only user information
+    localStorage.setItem(
+      'auth_user',
+      JSON.stringify(data.user)
+    );
+
     setUser(data.user);
+
+    // JWT should be stored in HttpOnly cookie
+    setToken(null);
   };
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
+  const logout = async () => {
+    // Tell server to remove the authentication cookie
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+    });
+
+    // Remove client-side user information
     localStorage.removeItem('auth_user');
-    setToken(null);
+
+    // Clear React state
     setUser(null);
+    setToken(null);
+
+    // Go to home page
     router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -83,6 +155,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+
+  if (!ctx) {
+    throw new Error(
+      'useAuth must be used within AuthProvider'
+    );
+  }
+
   return ctx;
 }

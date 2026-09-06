@@ -1,32 +1,27 @@
-// Use global cache for serverless compatibility
-declare global {
-  var rateLimitCache: Map<string, { count: number; resetAt: number }> | undefined;
-}
+import redis from './redis';
 
-const requestCounts = global.rateLimitCache || new Map<string, { count: number; resetAt: number }>();
-
-if (process.env.NODE_ENV !== 'production') {
-  (global as any).rateLimitCache = requestCounts;
-}
-
-export function rateLimit(ip: string, limit = 30, windowMs = 60000): boolean {
-  const now = Date.now();
-  const entry = requestCounts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    requestCounts.set(ip, { count: 1, resetAt: now + windowMs });
-    return true;
+export async function rateLimit(ip: string, limit = 30, windowMs = 60000): Promise<boolean> {
+  const windowSeconds = Math.ceil(windowMs / 1000);
+  const key = `ratelimit:${ip}`;
+  
+  const currentCount = await redis.incr(key);
+  
+  if (currentCount === 1) {
+    await redis.expire(key, windowSeconds);
   }
-  if (entry.count >= limit) return false;
-  entry.count++;
-  return true;
+  
+  return currentCount <= limit;
 }
 
-export function getRateLimitHeaders(ip: string, limit = 30, windowMs = 60000) {
-  const entry = requestCounts.get(ip);
-  const remaining = entry ? Math.max(0, limit - entry.count) : limit;
+export async function getRateLimitHeaders(ip: string, limit = 30, windowMs = 60000) {
+  const key = `ratelimit:${ip}`;
+  const currentCountStr = await redis.get(key);
+  const currentCount = currentCountStr ? parseInt(currentCountStr, 10) : 0;
+  
+  const remaining = Math.max(0, limit - currentCount);
+  
   return {
     'X-RateLimit-Limit': String(limit),
     'X-RateLimit-Remaining': String(remaining),
-    'X-RateLimit-Reset': String(entry ? Math.ceil(entry.resetAt / 1000) : Math.ceil((Date.now() + windowMs) / 1000)),
   };
 }

@@ -6,6 +6,7 @@ import TopNav from '@/components/common/TopNav';
 import BottomNav from '@/components/common/BottomNav';
 import { AuthProvider } from '@/lib/AuthContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
+import StoreProvider from '@/lib/store/StoreProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col md:pb-0 pb-12"><ScrollProgress />
 <AuthProvider>
+<StoreProvider>
 <ThemeProvider>
 <TopNav />
 <div className="pt-10 md:pt-10">
@@ -41,6 +43,7 @@ export default function RootLayout({
 </div>
 <BottomNav />
 </ThemeProvider>
+</StoreProvider>
 </AuthProvider></body>
     </html>
   );

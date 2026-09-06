@@ -7,10 +7,11 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    if (!rateLimit(ip, 30, 60000)) {
+    const isRateLimited = await rateLimit(ip, 30, 60000);
+    if (!isRateLimited) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
-        { status: 429, headers: getRateLimitHeaders(ip, 30, 60000) }
+        { status: 429, headers: await getRateLimitHeaders(ip, 30, 60000) }
       );
     }
     const { searchParams } = new URL(request.url);
@@ -47,10 +48,11 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    if (!rateLimit(ip, 30, 60000)) {
+    const isRateLimited = await rateLimit(ip, 30, 60000);
+    if (!isRateLimited) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
-        { status: 429, headers: getRateLimitHeaders(ip, 30, 60000) }
+        { status: 429, headers: await getRateLimitHeaders(ip, 30, 60000) }
       );
     }
     const { authorName, message, targetRole, readinessScore } = await request.json();

@@ -7,10 +7,11 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     
     // Stricter rate limiting for AI endpoints (3 requests per minute)
-    if (!rateLimit(ip, 3, 60000)) {
+    const isRateLimited = await rateLimit(ip, 3, 60000);
+    if (!isRateLimited) {
       return NextResponse.json(
         { error: 'Too many AI requests. Please try again later.' },
-        { status: 429, headers: getRateLimitHeaders(ip, 3, 60000) }
+        { status: 429, headers: await getRateLimitHeaders(ip, 3, 60000) }
       );
     }
 

@@ -1,15 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'info' | 'error' } | null>(null);
+
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message) {
+      setToast({ msg: message, type: 'info' });
+      // clear the message from url
+      const url = new URL(window.location.href);
+      url.searchParams.delete('message');
+      window.history.replaceState({}, '', url);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 3500);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +54,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4 relative">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`absolute top-4 right-4 px-4 py-3 rounded-xl shadow-lg transition-all duration-300 transform translate-y-0 opacity-100 ${
+            toast.type === 'info' ? 'bg-[var(--accent)] text-white' : 'bg-red-500 text-white'
+          }`}>
+            {toast.msg}
+        </div>
+      )}
+
       <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-8">
         <div className="text-center mb-8">
           <h1 className="font-display text-2xl font-bold text-[var(--text)]">Welcome Back</h1>
@@ -93,5 +122,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

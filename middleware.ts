@@ -37,7 +37,7 @@ export function middleware(request: NextRequest) {
 
   // Check if path is public
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
-  
+
   // Check if path is protected API
   const isProtectedApi = protectedApiPaths.some(path => pathname.startsWith(path));
 
@@ -81,15 +81,16 @@ export function middleware(request: NextRequest) {
   }
 
   // For protected pages, redirect to login if not authenticated
-  if (!isPublicPath && pathname.startsWith('/dashboard') || 
-      pathname.startsWith('/profile') || 
-      pathname.startsWith('/history') ||
-      pathname.startsWith('/scores')) {
+  if (!isPublicPath && (pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/history') ||
+    pathname.startsWith('/scores'))) {
     const token = request.cookies.get('auth_token')?.value;
-    
+
     if (!token) {
       console.log(`[${new Date().toISOString()}] Unauthenticated user redirected from ${pathname}`);
       const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('message', 'Please login to access protected routes.');
       return NextResponse.redirect(loginUrl);
     }
   }
@@ -111,3 +112,6 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 };
+
+// middleware.ts incoming request ko page/API tak pohanchne se pehle check aur control karta hai.
+// Ye authentication, authorization, redirects, logging, etc.ke liye use hota hai.

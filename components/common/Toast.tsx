@@ -10,6 +10,11 @@ interface ToastProps {
   type?: ToastType;
   onClose?: () => void;
   duration?: number;
+  /**
+   * Force a specific theme for the toast regardless of system theme.
+   * 'dark' will use dark background colors, 'light' will use light colors.
+   */
+  theme?: 'dark' | 'light';
 }
 
 const config: Record<ToastType, {
@@ -21,53 +26,76 @@ const config: Record<ToastType, {
   title: string;
   titleColor: string;
   textColor: string;
+  // Additional fields for forced theme styling
+  lightBg: string;
+  darkBg: string;
+  lightBorder: string;
+  darkBorder: string;
 }> = {
   success: {
     icon: <CheckCircle size={20} />, 
     bar: 'bg-emerald-500',
-    bg: 'bg-emerald-500',
+    bg: 'bg-white dark:bg-[#1A1D27]',
     border: 'border-emerald-200 dark:border-emerald-800',
-    iconColor: 'text-white',
+    iconColor: 'text-emerald-500',
     title: 'Success',
-    titleColor: 'text-white',
-    textColor: 'text-white',
+    titleColor: 'text-[var(--text)]',
+    textColor: 'text-[var(--text)]',
+    lightBg: 'bg-white',
+    darkBg: 'bg-[#1A1D27]',
+    lightBorder: 'border-emerald-200',
+    darkBorder: 'border-emerald-800',
   },
   error: {
     icon: <XCircle size={20} />, 
     bar: 'bg-red-500',
-    bg: 'bg-red-500',
+    bg: 'bg-white dark:bg-[#1A1D27]',
     border: 'border-red-200 dark:border-red-800',
-    iconColor: 'text-white',
+    iconColor: 'text-red-500',
     title: 'Error',
-    titleColor: 'text-white',
-    textColor: 'text-white',
+    titleColor: 'text-[var(--text)]',
+    textColor: 'text-[var(--text)]',
+    lightBg: 'bg-white',
+    darkBg: 'bg-[#1A1D27]',
+    lightBorder: 'border-red-200',
+    darkBorder: 'border-red-800',
   },
   info: {
-    icon: <Info size={20} />,
+    icon: <Info size={20} />, 
     bar: 'bg-blue-500',
-    bg: 'bg-[var(--accent)] text-white',
+    bg: 'bg-white dark:bg-[#1A1D27]',
     border: 'border-blue-200 dark:border-blue-800',
-    iconColor: 'text-white',
+    iconColor: 'text-blue-500',
     title: 'Info',
-    titleColor: 'text-white',
-    textColor: 'text-white',
+    titleColor: 'text-[var(--text)]',
+    textColor: 'text-[var(--text)]',
+    lightBg: 'bg-white',
+    darkBg: 'bg-[#1A1D27]',
+    lightBorder: 'border-blue-200',
+    darkBorder: 'border-blue-800',
   },
   warning: {
     icon: <AlertTriangle size={20} />,
     bar: 'bg-amber-500',
-    bg: 'bg-amber-500',
+    bg: 'bg-white dark:bg-[#1A1D27]',
     border: 'border-amber-200 dark:border-amber-800',
     iconColor: 'text-amber-500',
     title: 'Heads up',
-    titleColor: 'text-white',
-    textColor: 'text-white',
+    titleColor: 'text-[var(--text)]',
+    textColor: 'text-[var(--text)]',
+    lightBg: 'bg-white',
+    darkBg: 'bg-[#1A1D27]',
+    lightBorder: 'border-amber-200',
+    darkBorder: 'border-amber-800',
   },
 };
 
-export default function Toast({ msg, type = 'info', onClose, duration = 4000 }: ToastProps) {
+export default function Toast({ msg, type = 'info', onClose, duration = 4000, theme }: ToastProps) {
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(100);
   const c = config[type];
+  // Determine if we should force dark or light styles
+  const isDark = theme === 'dark' || (!theme && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   useEffect(() => {
     // Slide in
@@ -98,7 +126,7 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000 }: 
     <div
       className={`
         relative flex items-start gap-3 w-[340px] max-w-[90vw]
-        ${c.bg} border ${c.border}
+        ${isDark ? c.darkBg : c.lightBg} border ${isDark ? c.darkBorder : c.lightBorder}
         rounded-2xl shadow-2xl px-4 pt-4 pb-3 overflow-hidden
         transition-all duration-400 ease-out
         ${visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}

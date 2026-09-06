@@ -19,6 +19,7 @@ const config: Record<ToastType, {
   border: string;
   iconColor: string;
   title: string;
+  titleColor: string;
   textColor: string;
 }> = {
   success: {
@@ -28,6 +29,7 @@ const config: Record<ToastType, {
     border: 'border-emerald-200 dark:border-emerald-800',
     iconColor: 'text-white',
     title: 'Success',
+    titleColor: 'text-white',
     textColor: 'text-white',
   },
   error: {
@@ -37,6 +39,7 @@ const config: Record<ToastType, {
     border: 'border-red-200 dark:border-red-800',
     iconColor: 'text-white',
     title: 'Error',
+    titleColor: 'text-white',
     textColor: 'text-white',
   },
   info: {
@@ -46,6 +49,7 @@ const config: Record<ToastType, {
     border: 'border-blue-200 dark:border-blue-800',
     iconColor: 'text-white',
     title: 'Info',
+    titleColor: 'text-white',
     textColor: 'text-white',
   },
   warning: {
@@ -55,6 +59,7 @@ const config: Record<ToastType, {
     border: 'border-amber-200 dark:border-amber-800',
     iconColor: 'text-amber-500',
     title: 'Heads up',
+    titleColor: 'text-white',
     textColor: 'text-white',
   },
 };
@@ -111,7 +116,7 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000 }: 
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-0.5">
+        <p className={`text-xs font-semibold ${c.titleColor} uppercase tracking-widest mb-0.5`}>
           {c.title}
         </p>
         <p className={`text-sm font-medium ${c.textColor} leading-snug`}>{msg}</p>

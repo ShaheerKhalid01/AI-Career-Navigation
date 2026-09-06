@@ -40,11 +40,21 @@ export async function POST(request: NextRequest) {
 
     const token = jwt.sign({ userId: user._id, email: user.email }, getJwtSecret(), { expiresIn: '7d' });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: 'Login successful',
       token,
       user: { id: user._id, name: user.name, email: user.email },
     });
+
+    response.cookies.set('auth_token', token, {
+      httpOnly: false, // Accessible by client JS if needed, but middleware will read it as a cookie
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     if (error instanceof Error) {

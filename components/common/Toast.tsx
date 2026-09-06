@@ -19,38 +19,43 @@ const config: Record<ToastType, {
   border: string;
   iconColor: string;
   title: string;
+  textColor: string;
 }> = {
   success: {
-    icon: <CheckCircle size={20} />,
+    icon: <CheckCircle size={20} />, 
     bar: 'bg-emerald-500',
-    bg: 'bg-white dark:bg-[#1A1D27]',
+    bg: 'bg-emerald-500',
     border: 'border-emerald-200 dark:border-emerald-800',
-    iconColor: 'text-emerald-500',
+    iconColor: 'text-white',
     title: 'Success',
+    textColor: 'text-white',
   },
   error: {
-    icon: <XCircle size={20} />,
+    icon: <XCircle size={20} />, 
     bar: 'bg-red-500',
-    bg: 'bg-white dark:bg-[#1A1D27]',
+    bg: 'bg-red-500',
     border: 'border-red-200 dark:border-red-800',
-    iconColor: 'text-red-500',
+    iconColor: 'text-white',
     title: 'Error',
+    textColor: 'text-white',
   },
   info: {
     icon: <Info size={20} />,
     bar: 'bg-blue-500',
-    bg: 'bg-white dark:bg-[#1A1D27]',
+    bg: 'bg-[var(--accent)] text-white',
     border: 'border-blue-200 dark:border-blue-800',
-    iconColor: 'text-blue-500',
+    iconColor: 'text-white',
     title: 'Info',
+    textColor: 'text-white',
   },
   warning: {
     icon: <AlertTriangle size={20} />,
     bar: 'bg-amber-500',
-    bg: 'bg-white dark:bg-[#1A1D27]',
+    bg: 'bg-amber-500',
     border: 'border-amber-200 dark:border-amber-800',
     iconColor: 'text-amber-500',
     title: 'Heads up',
+    textColor: 'text-white',
   },
 };
 
@@ -109,7 +114,7 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000 }: 
         <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-0.5">
           {c.title}
         </p>
-        <p className="text-sm font-medium text-[var(--text)] leading-snug">{msg}</p>
+        <p className={`text-sm font-medium ${c.textColor} leading-snug`}>{msg}</p>
       </div>
 
       {/* Close button */}

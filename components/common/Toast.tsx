@@ -128,7 +128,7 @@ export default function Toast({ msg, type = 'info', onClose, duration = 4000 }: 
           setVisible(false);
           setTimeout(() => onClose?.(), 400);
         }}
-        className="shrink-0 mt-0.5 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors rounded-lg p-0.5"
+        className="shrink-0 mt-0.5 text-white hover:text-white transition-colors rounded-lg p-0.5"
         aria-label="Dismiss"
       >
         <X size={15} />

@@ -38,12 +38,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, getJwtSecret(), { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id.toString(), email: user.email }, getJwtSecret(), { expiresIn: '7d' });
 
     const response = NextResponse.json({
       message: 'Login successful',
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id.toString(), name: user.name, email: user.email },
     });
 
     response.cookies.set('auth_token', token, {

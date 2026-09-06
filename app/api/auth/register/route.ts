@@ -72,12 +72,12 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await User.create({ name, email: email.toLowerCase(), password: hashedPassword });
 
-    const token = jwt.sign({ userId: user._id, email: user.email }, getJwtSecret(), { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id.toString(), email: user.email }, getJwtSecret(), { expiresIn: '7d' });
 
     const response = NextResponse.json({
       message: 'Account created successfully',
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id.toString(), name: user.name, email: user.email },
     });
 
     response.cookies.set('auth_token', token, {

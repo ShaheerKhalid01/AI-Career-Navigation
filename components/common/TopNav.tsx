@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileText, BarChart3, Map, Users, Clock, LayoutDashboard, User, Mail, LogOut, Briefcase, Mic } from 'lucide-react';
+import { FileText, BarChart3, Map, Users, Clock, LayoutDashboard, User, Mail, LogOut, Briefcase, Mic, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
 const LINKS = [
@@ -17,6 +17,7 @@ const LINKS = [
   { href: '/contact', label: 'Contact', icon: Mail },
   { href: '/cover-letter', label: 'Cover Letter', icon: FileText },
   { href: '/interview-prep', label: 'Interview', icon: Mic },
+  { href: '/how-to-use', label: 'Help', icon: HelpCircle },
 ];
 
 export default function TopNav() {
@@ -39,9 +40,8 @@ export default function TopNav() {
                   key={link.href}
                   href={link.href}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap ${
-                    isActive ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'
-                  }`}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap ${isActive ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'
+                    }`}
                 >
                   <Icon size={12} />
                   {link.label}

@@ -40,7 +40,30 @@ export default function Dashboard() {
       router.push('/?message=Please upload and analyze your resume first — the dashboard will be available after that.');
       return;
     }
-    setData(JSON.parse(stored));
+    const parsed = JSON.parse(stored);
+
+    // Fix duplicate topics in roadmap for old data
+    if (parsed.roadmap && Array.isArray(parsed.roadmap)) {
+      parsed.roadmap = parsed.roadmap.map((week: any, index: number) => {
+        if (week.topics && week.topics.length > 0) {
+          // Add index to make topics unique
+          const baseTopic = week.topics[0];
+          const uniqueTopic = index === 0 ? baseTopic : `${baseTopic} - Part ${index + 1}`;
+          return {
+            ...week,
+            weekNumber: week.weekNumber || index + 1,
+            topics: [uniqueTopic]
+          };
+        }
+        return {
+          ...week,
+          weekNumber: week.weekNumber || index + 1,
+          topics: week.topics || []
+        };
+      });
+    }
+
+    setData(parsed);
   }, [router]);
 
   if (!data) return null;
@@ -53,6 +76,28 @@ export default function Dashboard() {
       missingSkills: data.analysis.missingSkills,
       weeks: data.roadmap,
     });
+  };
+
+  // Map targetRole to community slug
+  const getCommunitySlug = (role?: string) => {
+    const roleToCommunity: Record<string, string> = {
+      'software-development': 'resume-review',
+      'ai-ml': 'skill-development',
+      'devops': 'skill-development',
+      'data-science': 'skill-development',
+      'frontend': 'portfolio-review',
+      'backend': 'skill-development',
+      'digital-marketing': 'job-search',
+      'sales': 'job-search',
+      'human-resources': 'networking',
+      'finance-accounting': 'job-search',
+      'graphic-design': 'portfolio-review',
+      'content-writing': 'resume-review',
+      'customer-support': 'networking',
+      'project-management': 'career-switch',
+      'teaching-education': 'career-switch'
+    };
+    return roleToCommunity[role || ''] || 'general-discussion';
   };
 
   return (
@@ -69,7 +114,7 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push(`/community/${data.targetRole || 'software-development'}`)}
+              onClick={() => router.push(`/community/${getCommunitySlug(data.targetRole)}`)}
               className="flex items-center gap-2 text-sm border border-[var(--border)] text-[var(--text)] px-4 py-2 rounded-lg hover:border-[var(--accent)] transition-colors"
             >
               <Users size={15} />

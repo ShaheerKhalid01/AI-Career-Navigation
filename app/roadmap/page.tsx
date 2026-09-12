@@ -97,12 +97,16 @@ export default function GeneralRoadmapPage() {
     { name: 'Target role definition', progress: 100, status: 'Completed', statusColor: 'text-[var(--text-muted)]' },
   ];
 
-  const dynamicPhase2Items = data?.roadmap ? data.roadmap.slice(0, 3).map((w, idx) => ({
-    name: `Week ${w.weekNumber}: ${w.topics[0] || 'Skill building'}`,
-    progress: idx === 0 ? 40 : 0,
-    status: w.miniProjects?.[0] ? 'Project Ready' : 'Pending',
-    statusColor: 'text-[var(--text-muted)]'
-  })) : [
+  const dynamicPhase2Items = data?.roadmap && data.roadmap.length > 0 ? data.roadmap.slice(0, 3).map((w, idx) => {
+    const fallbackTopics = ['Foundation skills', 'Advanced concepts', 'Specialization'];
+    const topic = w.topics?.[idx] || w.topics?.[0] || fallbackTopics[idx];
+    return {
+      name: `Week ${w.weekNumber ?? (idx + 1)}: ${topic}`,
+      progress: idx === 0 ? 40 : 0,
+      status: w.miniProjects?.[0] ? 'Project Ready' : 'Pending',
+      statusColor: 'text-[var(--text-muted)]'
+    };
+  }) : [
     { name: 'Roadmap milestones', progress: 40, status: '4 tasks', statusColor: 'text-[var(--text-muted)]' },
     { name: 'Weekly schedule', progress: 90, status: 'Ready', statusColor: 'text-[var(--text-muted)]' },
     { name: 'Mentor check-in', progress: 15, status: 'Booked', statusColor: 'text-[var(--text-muted)]' },
@@ -137,12 +141,16 @@ export default function GeneralRoadmapPage() {
   ];
 
   // Dynamic timeline events matching the weeks
-  const TIMELINE_EVENTS = data?.roadmap ? data.roadmap.slice(0, 3).map((w) => ({
-    icon: Clock,
-    title: w.topics[0] || 'Optimize Core Skills',
-    week: `Week ${w.weekNumber}`,
-    desc: w.miniProjects[0] || 'Focus on learning and applying these topics to projects.'
-  })) : [
+  const TIMELINE_EVENTS = data?.roadmap && data.roadmap.length > 0 ? data.roadmap.slice(0, 3).map((w, idx) => {
+    const fallbackTopics = ['Foundation skills', 'Advanced concepts', 'Specialization'];
+    const topic = w.topics?.[idx] || w.topics?.[0] || fallbackTopics[idx];
+    return {
+      icon: Clock,
+      title: topic,
+      week: `Week ${w.weekNumber ?? (idx + 1)}`,
+      desc: w.miniProjects?.[0] || 'Focus on learning and applying these topics to projects.'
+    };
+  }) : [
     { icon: Clock, title: 'Resume optimization sprint', week: 'Week 1', desc: 'Refine summary, strengthen keywords, and align achievements to target roles.' },
     { icon: BookOpen, title: 'Skill-building roadmap', week: 'Week 2', desc: 'Complete focused learning modules and track progress against role requirements.' },
     { icon: Users2, title: 'Community feedback loop', week: 'Week 3', desc: 'Share progress, gather peer feedback, and iterate on your portfolio and interview prep.' },
@@ -223,7 +231,7 @@ export default function GeneralRoadmapPage() {
                 {['All', 'Resume', 'Skills', 'Interview', 'Portfolio'].map((f) => (
                   <button
                     key={f}
-                    onClick={() => { setSelectedFilter(f); setShowFilter(false); }}
+                    onClick={() => setSelectedFilter(f)}
                     className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
                       selectedFilter === f
                         ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
@@ -289,8 +297,8 @@ export default function GeneralRoadmapPage() {
                 <p className="text-xs text-[var(--text-muted)] mb-5">{phase.desc}</p>
 
                 <div className="space-y-4">
-                  {phase.items.map((item) => (
-                    <div key={item.name} className="space-y-1">
+                  {phase.items.map((item, itemIdx) => (
+                    <div key={`${item.name}-${itemIdx}`} className="space-y-1">
                       <div className="flex justify-between text-xs font-semibold">
                         <span className="truncate max-w-[180px]">{item.name}</span>
                         <span className={item.statusColor}>{item.status}</span>

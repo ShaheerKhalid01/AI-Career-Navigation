@@ -8,7 +8,7 @@ interface WeekCardProps {
   isLast: boolean;
 }
 
-export default function WeekCard({ weekNumber, topics, resources, miniProjects, isLast }: WeekCardProps) {
+export default function WeekCard({ weekNumber = 1, topics = [], resources = [], miniProjects = [], isLast }: WeekCardProps) {
   return (
     <div
       className="relative pl-10 animate-fade-in-up"
@@ -22,7 +22,7 @@ export default function WeekCard({ weekNumber, topics, resources, miniProjects, 
       )}
 
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-5 mb-8 hover-lift">
-        <span className="font-mono text-xs tracking-widest text-[var(--accent)]">WEEK {String(weekNumber).padStart(2, '0')}</span>
+        <span className="font-mono text-xs tracking-widest text-[var(--accent)]">WEEK {String(weekNumber || 1).padStart(2, '0')}</span>
 
         <div className="mt-3">
           <p className="text-xs text-[var(--text-muted)] mb-1">Topics</p>
@@ -43,8 +43,8 @@ export default function WeekCard({ weekNumber, topics, resources, miniProjects, 
             <p className="text-xs text-[var(--text-muted)] mb-1">Resources</p>
             <div className="flex flex-col gap-1">
               {resources.map((r) => (
-                
-                  <a key={r.title} 
+
+                  <a key={r.title}
 href={r.url}
                   target="_blank"
                   rel="noopener noreferrer"

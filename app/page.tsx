@@ -23,13 +23,14 @@ function HomeContent() {
   const { token } = useAuth();
   const dispatch = useDispatch();
   const { showToast } = useToast();
-  
+
   const { loading, error, hasResume, analysisData } = useSelector(
     (state: RootState) => state.resume
   );
   const searchParams = useSearchParams();
 
   const toastShown = useRef(false);
+  const pendingFileRef = useRef<File | null>(null);
 
   // Show toast for messages coming from redirects (e.g. from dashboard)
   useEffect(() => {
@@ -49,7 +50,7 @@ function HomeContent() {
       try {
         const data = JSON.parse(stored);
         dispatch(setAnalysisData(data));
-      } catch {}
+      } catch { }
     }
   }, [dispatch]);
 
@@ -61,10 +62,16 @@ function HomeContent() {
     try {
       generateRoadmapPdf({
         targetRole: analysisData.targetRole || 'target-role',
-        readinessScore: analysisData.analysis?.readinessScore || 0,
+        readinessScore: analysisData.analysis?.readinessScore ?? 0,
         matchedSkills: analysisData.analysis?.matchedSkills || [],
         missingSkills: analysisData.analysis?.missingSkills || [],
         weeks: analysisData.roadmap || [],
+        atsScore: analysisData.atsCheck?.score,
+        atsIssues: analysisData.atsCheck?.issues || [],
+        atsSuggestions: analysisData.atsCheck?.suggestions || [],
+        extractedSkills: analysisData.extractedSkills || [],
+        totalWords: analysisData.rawText?.split(/\s+/).filter(Boolean).length,
+        generatedAt: new Date().toLocaleString(),
       });
       showToast('PDF report downloaded!', 'success');
     } catch {
@@ -99,6 +106,7 @@ function HomeContent() {
       const finalData = { ...analyzeData, targetRole: role };
       sessionStorage.setItem('navResult', JSON.stringify(finalData));
       dispatch(setAnalysisData(finalData));
+      dispatch(setHasResume(true)); // Switch UI from uploader to preview
 
       const historyItem = {
         type: 'Resume Uploaded',
@@ -122,7 +130,7 @@ function HomeContent() {
   return (
     <main className="min-h-screen bg-[var(--bg)] ">
       <div className="max-w-6xl mx-auto">
-        
+
         <GradientHeader
           eyebrow="Resume"
           title="Resume"
@@ -133,17 +141,21 @@ function HomeContent() {
         <div className="px-5 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 animate-fade-in-up">
-            <ResumeWorkspaceToolbar 
-              onFileChange={() => dispatch(setHasResume(false))}
-              onDownloadPdf={handleDownloadPdf} 
+            <ResumeWorkspaceToolbar
+              onFileChange={(file) => {
+                pendingFileRef.current = file;
+                dispatch(setHasResume(false));
+              }}
+              onDownloadPdf={handleDownloadPdf}
             />
-            
+
             {!hasResume && (
-              <ResumeUploader 
-                onAnalyze={handleAnalyze} 
-                loading={loading} 
-                error={error} 
+              <ResumeUploader
+                onAnalyze={handleAnalyze}
+                loading={loading}
+                error={error}
                 onCancel={() => dispatch(setHasResume(true))}
+                initialFile={pendingFileRef.current}
               />
             )}
 

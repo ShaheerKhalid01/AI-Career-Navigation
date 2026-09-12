@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restore authentication state when app starts
   useEffect(() => {
     const storedUser = localStorage.getItem('auth_user');
+    const storedToken = localStorage.getItem('auth_token');
 
     if (storedUser) {
       try {
@@ -45,6 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('auth_user');
       }
     }
+
+    if (storedToken) {
+      setToken(storedToken);
+    }
+
     // for refresh the use effect used for useState function vlaeu persists (reset state result avoidance)
     setLoading(false);
   }, []);
@@ -69,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data.error || 'Login failed');
     }
 
-    // Store only non-sensitive user information on client
+    // Store token and user information on client
+    localStorage.setItem('auth_token', data.token);
     localStorage.setItem(
       'auth_user',
       JSON.stringify(data.user)
@@ -77,10 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Update React state
     setUser(data.user);
-
-    // JWT should be stored in HttpOnly cookie
-    // by the login API, not localStorage.
-    setToken(null);
+    setToken(data.token);
   };
 
   const register = async (
@@ -108,16 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data.error || 'Registration failed');
     }
 
-    // Store only user information
+    // Store token and user information
+    localStorage.setItem('auth_token', data.token);
     localStorage.setItem(
       'auth_user',
       JSON.stringify(data.user)
     );
 
     setUser(data.user);
-
-    // JWT should be stored in HttpOnly cookie
-    setToken(null);
+    setToken(data.token);
   };
 
   const logout = async () => {
@@ -126,8 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: 'POST',
     });
 
-    // Remove client-side user information
+    // Remove client-side user information and token
     localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_token');
 
     // Clear React state
     setUser(null);

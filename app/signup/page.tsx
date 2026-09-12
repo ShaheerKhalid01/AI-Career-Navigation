@@ -26,7 +26,7 @@ export default function SignupPage() {
       if (!res.ok) throw new Error(data.error || 'Registration failed');
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify(data.user));
-      window.location.href = '/dashboard';
+      window.location.href = '/';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

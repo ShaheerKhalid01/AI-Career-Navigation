@@ -40,7 +40,7 @@ function LoginContent() {
       if (!res.ok) throw new Error(data.error || 'Login failed');
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify(data.user));
-      window.location.href = '/dashboard';
+      window.location.href = '/';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

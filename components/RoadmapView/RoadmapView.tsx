@@ -21,7 +21,7 @@ export default function RoadmapView({ weeks }: RoadmapViewProps) {
       </p>
       <div>
         {weeks.map((week, i) => (
-          <WeekCard key={week.weekNumber} {...week} isLast={i === weeks.length - 1} />
+          <WeekCard key={`${week.weekNumber}-${i}`} {...week} isLast={i === weeks.length - 1} />
         ))}
       </div>
     </div>

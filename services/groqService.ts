@@ -26,24 +26,38 @@ export async function checkATSCompatibility(resumeText: string): Promise<AtsComp
   }
 
   try {
+    const prompt = `You are an ATS resume analysis assistant. Return concise JSON with score, issues, suggestions.
+
+Analyze the following resume text for ATS compatibility. Return JSON only with keys score, issues, suggestions.
+
+JSON format:
+{
+  "score": 0-100,
+  "issues": ["issue1", "issue2"],
+  "suggestions": ["suggestion1", "suggestion2"]
+}
+
+Resume text:\n${resumeText.slice(0, 8000)}`;
+
     const response = await groq.chat.completions.create({
       messages: [
-        {
-          role: 'system',
-          content: 'You are an ATS resume analysis assistant. Return concise JSON with score, issues, suggestions.'
-        },
-        {
-          role: 'user',
-          content: `Analyze the following resume text for ATS compatibility. Return JSON only with keys score, issues, suggestions. Resume text:\n${resumeText.slice(0, 8000)}`
-        }
+        { role: 'system', content: 'You are an expert ATS resume analyzer. Always return valid JSON only, no markdown, no explanations.' },
+        { role: 'user', content: prompt }
       ],
-      model: 'llama-3.1-8b-instant',
+      model: 'openai/gpt-oss-20b',
       temperature: 0.2,
-      max_tokens: 900
+      max_tokens: 1000,
     });
 
-    const content = response.choices?.[0]?.message?.content?.trim() || '{}';
-    const parsed = JSON.parse(content);
+    const content = response.choices[0].message.content?.trim() || '';
+    const cleaned = content.replace(/```json|```/g, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    let parsed;
+    if (jsonMatch) {
+      parsed = JSON.parse(jsonMatch[0]);
+    } else {
+      parsed = JSON.parse(cleaned);
+    }
 
     return {
       score: typeof parsed.score === 'number' ? parsed.score : 0,
@@ -61,13 +75,25 @@ export async function generateRoadmapForGaps(gaps: string[], role: string) {
   const skillList = gaps.length > 0 ? gaps : ['core fundamentals', 'project experience', 'industry alignment'];
   const weekCount = Math.min(Math.max(skillList.length, 4), 6);
 
+  // Ensure unique topics for each week by expanding the skill list if needed
+  const expandedSkills: string[] = [];
+  for (let i = 0; i < weekCount; i++) {
+    if (i < skillList.length) {
+      expandedSkills.push(skillList[i]);
+    } else {
+      // Add progressive variations for additional weeks
+      const baseSkill = skillList[i % skillList.length];
+      expandedSkills.push(`${baseSkill} - advanced practices`);
+    }
+  }
+
   return Array.from({ length: weekCount }, (_, index) => {
-    const focus = skillList[index % skillList.length];
+    const focus = expandedSkills[index];
     return {
-      week: index + 1,
-      title: `Week ${index + 1}: Strengthen ${focus}`,
-      focus,
-      goal: `Build confidence in ${focus} for ${normalizedRole}`
+      weekNumber: index + 1,
+      topics: [focus],
+      resources: [],
+      miniProjects: []
     };
   });
 }

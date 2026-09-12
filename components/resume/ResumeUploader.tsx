@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UploadCloud, FolderOpen, FileText, X, ShieldCheck, Loader2, Wand2 } from 'lucide-react';
 import RoleSelector from '@/components/RoleSelector/RoleSelector';
 
@@ -9,17 +9,25 @@ interface ResumeUploaderProps {
   loading: boolean;
   error: string | null;
   onCancel: () => void;
+  initialFile?: File | null;
 }
 
-export default function ResumeUploader({ onAnalyze, loading, error, onCancel }: ResumeUploaderProps) {
-  const [file, setFile] = useState<File | null>(null);
+export default function ResumeUploader({ onAnalyze, loading, error, onCancel, initialFile }: ResumeUploaderProps) {
+  const [file, setFile] = useState<File | null>(initialFile ?? null);
   const [role, setRole] = useState('');
-  const [showRoleStep, setShowRoleStep] = useState(false);
+  const [showRoleStep, setShowRoleStep] = useState(!!initialFile);
 
   const handleFileChange = (f: File) => {
     setFile(f);
     setShowRoleStep(true);
   };
+
+  useEffect(() => {
+    if (initialFile) {
+      setFile(initialFile);
+      setShowRoleStep(true);
+    }
+  }, [initialFile]);
 
   const handleAnalyzeClick = () => {
     if (file && role) {

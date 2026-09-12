@@ -1,8 +1,9 @@
+// this is for mobile
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileText, BarChart3, Map, Users, Clock, LayoutDashboard, User, Mail, LogIn, Briefcase, Mic } from 'lucide-react';
+import { FileText, BarChart3, Map, Users, Clock, LayoutDashboard, User, Mail, LogIn, Briefcase, Mic, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
 const TABS = [
@@ -17,6 +18,7 @@ const TABS = [
   { href: '/contact', label: 'Contact', icon: Mail },
   { href: '/cover-letter', label: 'Cover Letter', icon: FileText },
   { href: '/interview-prep', label: 'Interview', icon: Mic },
+  { href: '/how-to-use', label: 'Help', icon: HelpCircle },
 ];
 
 export default function BottomNav() {
@@ -36,9 +38,8 @@ export default function BottomNav() {
               key={tab.href}
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex flex-col items-center gap-0 px-1.5 py-0.5 rounded-lg transition-colors flex-shrink-0 ${
-                isActive ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)]'
-              }`}
+              className={`flex flex-col items-center gap-0 px-1.5 py-0.5 rounded-lg transition-colors flex-shrink-0 ${isActive ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)]'
+                }`}
             >
               <Icon size={13} />
               <span className="text-[7px] font-medium whitespace-nowrap leading-tight">{tab.label}</span>

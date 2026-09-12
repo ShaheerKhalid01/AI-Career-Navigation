@@ -53,7 +53,7 @@ Return only the letter text, no preamble or explanation.`;
         { role: 'system', content: 'You are a professional career coach and cover letter writer. Write concise, impactful cover letters that pass ATS filters.' },
         { role: 'user', content: prompt }
       ],
-      model: 'llama-3.1-8b-instant',
+      model: 'openai/gpt-oss-20b',
       temperature: 0.4,
       max_tokens: 1500,
     });
